@@ -29,6 +29,10 @@ unsigned int indices[] = {  // note that we start from 0!
     1, 2, 3    // second triangle
 };
 
+float mixValue = 0.2f;
+unsigned int upButtonState = GLFW_RELEASE;
+unsigned int downButtonState = GLFW_RELEASE;
+
 int main()
 {
     glfwInit();
@@ -102,7 +106,7 @@ int main()
     unsigned int texture1;
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
-    // set the texture wrapping/filtering options (on the currently bound texture object)
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -124,7 +128,7 @@ int main()
     unsigned int texture2;
     glGenTextures(1, &texture2);
     glBindTexture(GL_TEXTURE_2D, texture2);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -153,6 +157,8 @@ int main()
     {
         processInput(window);
 
+
+        ourShader.setFloat("mixValue", mixValue);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -185,6 +191,25 @@ void processInput(GLFWwindow *window)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && upButtonState == GLFW_RELEASE)
+    {
+        mixValue += 0.1f;
+        if (mixValue > 1.0f)
+            mixValue = 1.0f;
+        upButtonState = GLFW_PRESS;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && downButtonState == GLFW_RELEASE)
+    {
+        mixValue -= 0.1f;
+        if (mixValue < 0.0f)
+            mixValue = 0.0f;
+        downButtonState = GLFW_PRESS;
+    }
+
+    upButtonState = glfwGetKey(window, GLFW_KEY_UP);
+    downButtonState = glfwGetKey(window, GLFW_KEY_DOWN);
 }
 
 #endif // MAIN_H_INCLUDED

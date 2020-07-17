@@ -36,10 +36,14 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="assets/awesomeface.png" />
+		<Unit filename="assets/container.jpg" />
+		<Unit filename="assets/wall.jpg" />
 		<Unit filename="glad.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="include/Shader.h" />
+		<Unit filename="include/stb_image.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/Shader.cpp" />
 		<Unit filename="src/basic_fragment.fs" />
