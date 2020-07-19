@@ -5,6 +5,9 @@
 #include <glfw3.h>
 #include <iostream>
 #include <cmath>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "Shader.h"
 
@@ -157,6 +160,10 @@ int main()
     {
         processInput(window);
 
+        glm::mat4 transf = glm::mat4(1.0f);
+        transf = glm::translate(transf, glm::vec3(0.5f, -0.5f, 0.0f));
+        transf = glm::rotate(transf, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(transf));
 
         ourShader.setFloat("mixValue", mixValue);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -166,6 +173,12 @@ int main()
 //        float phase = sin(time) / 2.0f + 0.5f;
 //        int ourColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
 //        glUniform4f(ourColorLocation, phase, 0.0f, 0.0f, 1.0f);
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        transf = glm::mat4(1.0f);
+        transf = glm::translate(transf, glm::vec3(-0.5f, 0.5f, 0.0f));
+        transf = glm::rotate(transf, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(transf));
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
