@@ -209,6 +209,7 @@ int main()
     ourShader.use();
     glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0); // set manually
     ourShader.setInt("texture2", 1); // or with the custom Shader class
+    glEnable(GL_DEPTH_TEST);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // ---- RENDER LOOP ----
@@ -219,7 +220,7 @@ int main()
         ourShader.setFloat("mixValue", mixValue);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.5f, 0.0f));
