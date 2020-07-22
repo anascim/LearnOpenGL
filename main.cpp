@@ -36,6 +36,9 @@ float mixValue = 0.2f;
 unsigned int upButtonState = GLFW_RELEASE;
 unsigned int downButtonState = GLFW_RELEASE;
 
+int SCR_WIDTH = 800;
+int SCR_HEIGHT = 600;
+
 int main()
 {
     glfwInit();
@@ -49,7 +52,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -160,25 +163,25 @@ int main()
     {
         processInput(window);
 
-        glm::mat4 transf = glm::mat4(1.0f);
-        transf = glm::translate(transf, glm::vec3(0.5f, -0.5f, 0.0f));
-        transf = glm::rotate(transf, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(transf));
-
         ourShader.setFloat("mixValue", mixValue);
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 view = glm::mat4(1.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        glm::mat4 projection = glm::mat4(1.0f);
+        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f);
+        ourShader.setMat4("model", model);
+        ourShader.setMat4("view", view);
+        ourShader.setMat4("projection", projection);
 
 //        float time = glfwGetTime();
 //        float phase = sin(time) / 2.0f + 0.5f;
 //        int ourColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
 //        glUniform4f(ourColorLocation, phase, 0.0f, 0.0f, 1.0f);
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        transf = glm::mat4(1.0f);
-        transf = glm::translate(transf, glm::vec3(-0.5f, 0.5f, 0.0f));
-        transf = glm::rotate(transf, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        glUniformMatrix4fv(glGetUniformLocation(ourShader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(transf));
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
