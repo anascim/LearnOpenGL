@@ -1,23 +1,29 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
 
-#include <glad.h>
-#include <glfw3.h>
 #include <iostream>
 #include <cmath>
+#include <map>
+
+#include <glad.h>
+#include <glfw3.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 #include "Shader.h"
+#include "Camera.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-
-// GLFW callbacks declarations
-void didChangeSize(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+void didChangeSize(GLFWwindow* window, int width, int height);
+void didChangeMousePosition(GLFWwindow* window, double xPos, double yPos);
+void didChangeScrollValue(GLFWwindow* window, double xOffset, double yOffset);
 
 float cube_vertices[] = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
@@ -89,11 +95,27 @@ unsigned int indices[] = {  // note that we start from 0!
 };
 
 float mixValue = 0.2f;
-unsigned int upButtonState = GLFW_RELEASE;
-unsigned int downButtonState = GLFW_RELEASE;
-
 int SCR_WIDTH = 800;
 int SCR_HEIGHT = 600;
+
+float deltaTime = 0.0f;
+float lastTime = 0.0f;
+
+// ---- CAMERA ----
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+
+float lastX = SCR_WIDTH/2.0f, lastY = SCR_HEIGHT/2.0f;
+bool isFirstMouseUpdate = true;
+
+// ---- FONTS ----
+struct Character
+{
+    unsigned int textureID;
+    glm::ivec2 size;
+    glm::ivec2 bearing;
+    unsigned int advance;
+};
+std::map<char, Character> characters;
 
 int main()
 {
@@ -130,8 +152,13 @@ int main()
     // (lower-left corner, width, height)
     glViewport(0, 0, 800, 600);
 
-    // make callback to update viewport on window size change
+    // Setup callbakcs
+    // update viewport on window size change
     glfwSetFramebufferSizeCallback(window, didChangeSize);
+    glfwSetCursorPosCallback(window, didChangeMousePosition);
+    glfwSetScrollCallback(window, didChangeScrollValue);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     Shader ourShader("src/basic_vertex.vs", "src/basic_fragment.fs");
 
@@ -213,6 +240,72 @@ int main()
     }
     stbi_image_free(data);
 
+
+    // ---- Free Type --- (font loading)
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft))
+    {
+        std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+        return -1;
+    }
+
+    FT_Face face;
+    if (FT_New_Face(ft, "./fonts/NotoMono-Regular.ttf", 0, &face))
+    {
+        std::cout << "ERROR::FREETYPE: failed to load font" << std::endl;
+        return -1;
+    }
+
+    FT_Set_Pixel_Sizes(face, 0, 48);
+    if (FT_Load_Char(face, 'X', FT_LOAD_RENDER))
+    {
+        std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+        return -1;
+    }
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    for (unsigned char c = 0; c < 128; c++)
+    {
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+        {
+            std::cout << "ERROR::FREETYPE: Failed to load glyph" << std::endl;
+            continue;
+        }
+
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            face->glyph->bitmap.width,
+            face->glyph->bitmap.rows,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            face->glyph->bitmap.buffer
+        );
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+        Character character = {
+            texture,
+            glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            face->glyph->advance.x
+        };
+        characters.insert(std::pair<char, Character>(c, character));
+    }
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+
+    // ---- PERMANENT SETUP ----
+
     glActiveTexture(GL_TEXTURE0); // default on most drivers
     glBindTexture(GL_TEXTURE_2D, texture1);
     glActiveTexture(GL_TEXTURE1);
@@ -224,22 +317,26 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    glm::mat4 projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f);
-    ourShader.setMat4("view", view);
-    ourShader.setMat4("projection", projection);
-
     // ---- RENDER LOOP ----
     while(!glfwWindowShouldClose(window))
     {
+        float currentTime = (float)glfwGetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
         processInput(window);
 
         ourShader.setFloat("mixValue", mixValue);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glm::mat4 view = glm::lookAt(camera.Position, camera.Position + camera.Front, camera.Up);
+        ourShader.setMat4("view", view);
+
+        glm::mat4 projection = glm::mat4(1.0f);
+        projection = glm::perspective(glm::radians(camera.Fov), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f);
+        ourShader.setMat4("projection", projection);
 
         for (int i = 0; i < 10; i++)
         {
@@ -266,6 +363,24 @@ int main()
     return 0;
 }
 
+void processInput(GLFWwindow *window)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    int hMove = 0;
+    int vMove = 0;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        vMove += 1;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        hMove -= 1;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        vMove -= 1;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        hMove += 1;
+
+    camera.ProcessMovement(hMove, vMove, deltaTime);
+}
 
 // ########################
 // ###  GLFW CALLBACKS  ###
@@ -276,29 +391,26 @@ void didChangeSize(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window)
+void didChangeMousePosition(GLFWwindow* window, double xPos, double yPos)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && upButtonState == GLFW_RELEASE)
+    if (isFirstMouseUpdate)
     {
-        mixValue += 0.1f;
-        if (mixValue > 1.0f)
-            mixValue = 1.0f;
-        upButtonState = GLFW_PRESS;
+        lastX = xPos;
+        lastY = yPos;
+        isFirstMouseUpdate = false;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && downButtonState == GLFW_RELEASE)
-    {
-        mixValue -= 0.1f;
-        if (mixValue < 0.0f)
-            mixValue = 0.0f;
-        downButtonState = GLFW_PRESS;
-    }
+    float xOffset = xPos - lastX;
+    float yOffset = lastY - yPos; // reversed since y coordinates range from bottom to top
+    lastX = xPos;
+    lastY = yPos;
 
-    upButtonState = glfwGetKey(window, GLFW_KEY_UP);
-    downButtonState = glfwGetKey(window, GLFW_KEY_DOWN);
+    camera.ProcessRotation(xOffset, yOffset);
+}
+
+void didChangeScrollValue(GLFWwindow* window, double xOffset, double yOffset)
+{
+    camera.ProcessScroll((float)yOffset);
 }
 
 #endif // MAIN_H_INCLUDED
