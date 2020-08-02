@@ -1,3 +1,4 @@
+
 #ifndef CAMERA_H
 #define CAMERA_H
 
@@ -77,6 +78,11 @@ public:
             Fov = MIN_FOV;
     }
 
+    glm::mat4 GetViewMatrix()
+    {
+        return glm::lookAt(Position, Position + Front, Up);
+    }
+
 private:
     void updateVectors()
     {
@@ -87,7 +93,7 @@ private:
         front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
 
         Front = normalize(front);
-        Right = glm::normalize(glm::cross(Up, -Front));
+        Right = glm::normalize(glm::cross(WorldUp, -Front));
         Up = glm::normalize(glm::cross(Right, Front));
 /*
         std::cout << "position: (" << Position.x  << ", " << Position.y << ", " << Position.z << ")\n";

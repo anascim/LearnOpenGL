@@ -69,30 +69,8 @@ float cube_vertices[] = {
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
-glm::vec3 cubePositions[] = {
-    glm::vec3( 0.0f,  0.0f,  0.0f),
-    glm::vec3( 2.0f,  5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3( 2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f,  3.0f, -7.5f),
-    glm::vec3( 1.3f, -2.0f, -2.5f),
-    glm::vec3( 1.5f,  2.0f, -2.5f),
-    glm::vec3( 1.5f,  0.2f, -1.5f),
-    glm::vec3(-1.3f,  1.0f, -1.5f)
-};
-float vertices[] = {
-    // positions          // colors           // tex coord
-     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
-};
-
-unsigned int indices[] = {  // note that we start from 0!
-    0, 1, 3,   // first triangle
-    1, 2, 3    // second triangle
-};
+glm::vec3 cubePosition = glm::vec3(0.0f, 0.0f, -2.0f);
+glm::vec3 lightCubePosition = glm::vec3(2.0f, 1.0f, -1.0f);
 
 float mixValue = 0.2f;
 int SCR_WIDTH = 800;
@@ -158,43 +136,13 @@ int main()
     glfwSetCursorPosCallback(window, didChangeMousePosition);
     glfwSetScrollCallback(window, didChangeScrollValue);
 
+    glEnable(GL_DEPTH_TEST);
+
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    Shader ourShader("src/basic_vertex.vs", "src/basic_fragment.fs");
+    Shader basicShader("src/basic_vertex.vs", "src/basic_fragment.fs");
+    Shader lightShader("src/light_vertex.vs", "src/light_fragment.fs");
 
-    unsigned int CUBE_VAO;
-    glGenVertexArrays(1, &CUBE_VAO);
-    glBindVertexArray(CUBE_VAO);
-
-    unsigned int VBO, EBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-
-    // A VAO stores a reference to the last bound EBO
-    //glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
-
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // position attribute
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
-    //glEnableVertexAttribArray(0);
-    // color attribute
-    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (3 * sizeof(float)));
-    //glEnableVertexAttribArray(1);
-    // texture coordinate attribute
-    //glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (6 * sizeof(float)));
-    //glEnableVertexAttribArray(2);
 
 
     // ##################
@@ -242,6 +190,7 @@ int main()
 
 
     // ---- Free Type --- (font loading)
+
     FT_Library ft;
     if (FT_Init_FreeType(&ft))
     {
@@ -306,15 +255,38 @@ int main()
 
     // ---- PERMANENT SETUP ----
 
+    unsigned int cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
+    glBindVertexArray(cubeVAO);
+
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(0);
+
     glActiveTexture(GL_TEXTURE0); // default on most drivers
     glBindTexture(GL_TEXTURE_2D, texture1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
 
-    ourShader.use();
-    glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0); // set manually
-    ourShader.setInt("texture2", 1); // or with the custom Shader class
-    glEnable(GL_DEPTH_TEST);
+    basicShader.use();
+    glUniform1i(glGetUniformLocation(basicShader.ID, "texture1"), 0); // set manually
+    basicShader.setInt("texture2", 1); // or with the custom Shader class
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // ---- RENDER LOOP ----
@@ -326,27 +298,37 @@ int main()
 
         processInput(window);
 
-        ourShader.setFloat("mixValue", mixValue);
-
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 view = glm::lookAt(camera.Position, camera.Position + camera.Front, camera.Up);
-        ourShader.setMat4("view", view);
+
+        basicShader.use(); // program must be used before updating its uniforms
+        glm::mat4 cubeModel = glm::mat4(1.0f);
+        cubeModel = glm::translate(cubeModel, cubePosition);
+        basicShader.setMat4("model", cubeModel);
+        basicShader.setFloat("mixValue", mixValue);
+        basicShader.setFloat3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+        basicShader.setFloat3("lightColor", glm::vec3(1.0f));
+        glm::mat4 view = camera.GetViewMatrix();
+        basicShader.setMat4("view", view);
 
         glm::mat4 projection = glm::mat4(1.0f);
         projection = glm::perspective(glm::radians(camera.Fov), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f);
-        ourShader.setMat4("projection", projection);
+        basicShader.setMat4("projection", projection);
 
-        for (int i = 0; i < 10; i++)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.5f, 0.0f));
-            ourShader.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        glBindVertexArray(cubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        lightShader.use();
+        glm::mat4 lightModel = glm::mat4(1.0f);
+        lightModel = glm::translate(lightModel, lightCubePosition);
+        lightModel = glm::scale(lightModel, glm::vec3(0.2f));
+        lightShader.setMat4("model", lightModel);
+        lightShader.setMat4("view", view);
+        lightShader.setMat4("projection", projection);
+
+        glBindVertexArray(lightCubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
 //        float time = glfwGetTime();
 //        float phase = sin(time) / 2.0f + 0.5f;

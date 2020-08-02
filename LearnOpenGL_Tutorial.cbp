@@ -307,6 +307,8 @@
 		<Unit filename="src/Shader.cpp" />
 		<Unit filename="src/basic_fragment.fs" />
 		<Unit filename="src/basic_vertex.vs" />
+		<Unit filename="src/light_fragment.fs" />
+		<Unit filename="src/light_vertex.vs" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
