@@ -9,25 +9,36 @@ out vec4 FragColor;
 uniform sampler2D texture1;
 uniform sampler2D texture2;
 uniform float mixValue;
-uniform vec3 objectColor;
+
+uniform vec3 cameraPos;
+
+// Light
 uniform vec3 lightColor;
 uniform vec3 lightPos;
-uniform vec3 cameraPos;
-uniform float ambientStrength;
-uniform float diffuseStrength;
+
+// Material
+struct Material
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+uniform Material material;
 
 void main()
 {
-    float ambient = ambientStrength;
+    vec3 ambient = material.ambient;
 
     vec3 lightDir = normalize(WorldPos - lightPos);
     float nDotL = max(dot(Normal, -lightDir), 0.0f);
-    float diffuse = nDotL * diffuseStrength;
+    vec3 diffuse = nDotL * material.diffuse;
 
     vec3 reflection = reflect(lightDir, Normal);
     vec3 camDir = normalize(cameraPos - WorldPos);
-    float specular = pow(max(dot(camDir, reflection), 0.0f), 32.0f);
+    float vDotR = max(dot(camDir, reflection), 0.0f);
+    vec3 specular = pow(vDotR, material.shininess) * material.specular;
 
-    vec3 color = (ambient + diffuse + specular) * objectColor * lightColor;
+    vec3 color = (ambient + diffuse + specular) * lightColor;
     FragColor = vec4(color, 1.0f);
 }

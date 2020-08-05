@@ -72,7 +72,7 @@ float cube_vertices[] = {
 };
 
 glm::vec3 cubePosition = glm::vec3(0.0f, 0.0f, -2.0f);
-glm::vec3 lightCubePosition = glm::vec3(1.5f, 1.2f, -0.3f);
+glm::vec3 lightCubePosition = glm::vec3(1.5f, 0.6f, -0.3f);
 
 float mixValue = 0.2f;
 int SCR_WIDTH = 800;
@@ -291,8 +291,11 @@ int main()
     basicShader.use();
     glUniform1i(glGetUniformLocation(basicShader.ID, "texture1"), 0); // set manually
     basicShader.setInt("texture2", 1); // or with the custom Shader class
-    basicShader.setFloat("ambientStrength", 0.1f);
-    basicShader.setFloat("diffuseStrength", 1.0f);
+    // table of materials on: http://devernay.free.fr/cours/opengl/materials.html
+    basicShader.setFloat3("material.ambient", 0.0215f, 0.1745, 0.0215);
+    basicShader.setFloat3("material.diffuse", 0.07568, 0.61424, .07568);
+    basicShader.setFloat3("material.specular", 0.633 , 0.727811, 0.633);
+    basicShader.setFloat("material.shininess", 128.0f);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -308,11 +311,12 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
+        // DRAW CUBE
         basicShader.use(); // program must be used before updating its uniforms
         glm::mat4 cubeModel = glm::mat4(1.0f);
         cubeModel = glm::translate(cubeModel, cubePosition);
         cubeModel = glm::rotate(cubeModel, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+        cubeModel = glm::rotate(cubeModel, (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
 
         basicShader.setMat4("model", cubeModel);
         basicShader.setFloat("mixValue", mixValue);
@@ -330,6 +334,7 @@ int main()
         glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        // DRAW LIGHT CUBE
         lightShader.use();
         glm::mat4 lightModel = glm::mat4(1.0f);
         lightModel = glm::translate(lightModel, lightCubePosition);
@@ -341,13 +346,7 @@ int main()
         glBindVertexArray(lightCubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-//        float time = glfwGetTime();
-//        float phase = sin(time) / 2.0f + 0.5f;
-//        int ourColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-//        glUniform4f(ourColorLocation, phase, 0.0f, 0.0f, 1.0f);
-
-        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
+        // END RENDERING
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
