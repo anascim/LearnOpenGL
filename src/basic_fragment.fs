@@ -2,7 +2,7 @@
 
 in vec2 TexCoord;
 in vec3 Normal;
-in vec4 WorldPos;
+in vec3 WorldPos;
 
 out vec4 FragColor;
 
@@ -12,14 +12,22 @@ uniform float mixValue;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
-uniform float ambientIntensity;
-uniform float diffuseIntensity;
+uniform vec3 cameraPos;
+uniform float ambientStrength;
+uniform float diffuseStrength;
 
 void main()
 {
-    float ambient = ambientIntensity;
-    vec3 lightDirection = normalize(vec3(WorldPos) - lightPos);
-    float diffuse = max(dot(Normal, -lightDirection), 0.0f) * diffuseIntensity;
-    vec3 color = (ambient + diffuse) * objectColor * lightColor;
+    float ambient = ambientStrength;
+
+    vec3 lightDir = normalize(WorldPos - lightPos);
+    float nDotL = max(dot(Normal, -lightDir), 0.0f);
+    float diffuse = nDotL * diffuseStrength;
+
+    vec3 reflection = reflect(lightDir, Normal);
+    vec3 camDir = normalize(cameraPos - WorldPos);
+    float specular = pow(max(dot(camDir, reflection), 0.0f), 32.0f);
+
+    vec3 color = (ambient + diffuse + specular) * objectColor * lightColor;
     FragColor = vec4(color, 1.0f);
 }

@@ -72,7 +72,7 @@ float cube_vertices[] = {
 };
 
 glm::vec3 cubePosition = glm::vec3(0.0f, 0.0f, -2.0f);
-glm::vec3 lightCubePosition = glm::vec3(1.5f, 2.0f, -0.3f);
+glm::vec3 lightCubePosition = glm::vec3(1.5f, 1.2f, -0.3f);
 
 float mixValue = 0.2f;
 int SCR_WIDTH = 800;
@@ -291,8 +291,8 @@ int main()
     basicShader.use();
     glUniform1i(glGetUniformLocation(basicShader.ID, "texture1"), 0); // set manually
     basicShader.setInt("texture2", 1); // or with the custom Shader class
-    basicShader.setFloat("ambientIntensity", 0.1f);
-    basicShader.setFloat("diffuseIntensity", 1.5f);
+    basicShader.setFloat("ambientStrength", 0.1f);
+    basicShader.setFloat("diffuseStrength", 1.0f);
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -312,11 +312,14 @@ int main()
         basicShader.use(); // program must be used before updating its uniforms
         glm::mat4 cubeModel = glm::mat4(1.0f);
         cubeModel = glm::translate(cubeModel, cubePosition);
+        cubeModel = glm::rotate(cubeModel, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+
         basicShader.setMat4("model", cubeModel);
         basicShader.setFloat("mixValue", mixValue);
         basicShader.setFloat3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
         basicShader.setFloat3("lightColor", glm::vec3(1.0f));
         basicShader.setFloat3("lightPos", lightCubePosition);
+        basicShader.setFloat3("cameraPos", camera.Position);
         glm::mat4 view = camera.GetViewMatrix();
         basicShader.setMat4("view", view);
 
