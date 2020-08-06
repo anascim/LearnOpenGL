@@ -6,13 +6,14 @@
 #include <map>
 
 #include <glad.h>
-#include <glfw3.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <GLFW/glfw3.h>
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -317,6 +318,7 @@ int main()
         cubeModel = glm::translate(cubeModel, cubePosition);
         cubeModel = glm::rotate(cubeModel, (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
         cubeModel = glm::rotate(cubeModel, (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
+        //cubeModel = glm::rotate(cubeModel, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
         basicShader.setMat4("model", cubeModel);
         basicShader.setFloat("mixValue", mixValue);
