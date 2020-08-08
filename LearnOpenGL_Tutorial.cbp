@@ -16,7 +16,7 @@
 					<Add directory="include" />
 				</Compiler>
 				<Linker>
-					<Add library="/home/alexjn/OpenGL/lib/libglfw3.a" />
+					<Add directory="/home/alexjn/OpenGL/lib" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -36,13 +36,32 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Linker>
+			<Add library="/home/alexjn/OpenGL/lib/libglfw3.a" />
+			<Add library="/usr/local/lib/libfreetype.so" />
+			<Add library="/home/alexjn/OpenGL/lib/libIrrXML.a" />
+			<Add library="/home/alexjn/OpenGL/lib/libzlibstatic.a" />
+			<Add library="/home/alexjn/OpenGL/lib/libassimp.so" />
+			<Add directory="/home/alexjn/OpenGL/lib" />
+		</Linker>
 		<Unit filename="assets/awesomeface.png" />
+		<Unit filename="assets/backpack/ao.jpg" />
+		<Unit filename="assets/backpack/backpack.mtl" />
+		<Unit filename="assets/backpack/backpack.obj" />
+		<Unit filename="assets/backpack/diffuse.jpg" />
+		<Unit filename="assets/backpack/normal.png" />
+		<Unit filename="assets/backpack/roughness.jpg" />
+		<Unit filename="assets/backpack/source_attribution.txt" />
+		<Unit filename="assets/backpack/specular.jpg" />
 		<Unit filename="assets/container.jpg" />
 		<Unit filename="assets/wall.jpg" />
 		<Unit filename="fonts/NotoMono-Regular.ttf" />
 		<Unit filename="include/Camera.h" />
+		<Unit filename="include/Mesh.h" />
+		<Unit filename="include/Model.h" />
 		<Unit filename="include/Shader.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="src/Mesh.cpp" />
 		<Unit filename="src/Shader.cpp" />
 		<Unit filename="src/basic_fragment.fs" />
 		<Unit filename="src/basic_vertex.vs" />

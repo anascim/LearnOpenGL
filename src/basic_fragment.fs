@@ -1,3 +1,16 @@
+/*
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoords;
+
+uniform sampler2D texture_diffuse1;
+
+void main()
+{
+    FragColor = texture(texture_diffuse1, TexCoords);
+}
+*/
 #version 330 core
 
 in vec2 TexCoord;
@@ -6,10 +19,7 @@ in vec3 WorldPos;
 
 out vec4 FragColor;
 
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform float mixValue;
-
+// Camera
 uniform vec3 cameraPos;
 
 // Light
@@ -20,25 +30,26 @@ uniform vec3 lightPos;
 struct Material
 {
     vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
+    sampler2D diffuse;
+    sampler2D specular;
+    vec3 color;
     float shininess;
 };
 uniform Material material;
 
 void main()
 {
-    vec3 ambient = material.ambient;
+    vec3 ambient = material.ambient * vec3(texture(material.diffuse, TexCoord));
 
     vec3 lightDir = normalize(WorldPos - lightPos);
     float nDotL = max(dot(Normal, -lightDir), 0.0f);
-    vec3 diffuse = nDotL * material.diffuse;
+    vec3 diffuse = nDotL * vec3(texture(material.diffuse, TexCoord));
 
-    vec3 reflection = reflect(lightDir, Normal);
+    vec3 reflection = normalize(reflect(lightDir, Normal));
     vec3 camDir = normalize(cameraPos - WorldPos);
     float vDotR = max(dot(camDir, reflection), 0.0f);
-    vec3 specular = pow(vDotR, material.shininess) * material.specular;
+    vec3 specular = vec3(pow(vDotR, material.shininess));// * vec3(texture(material.specular, TexCoord));
 
-    vec3 color = (ambient + diffuse + specular) * lightColor;
+    vec3 color = (ambient + diffuse + specular) * lightColor * material.color;
     FragColor = vec4(color, 1.0f);
 }
