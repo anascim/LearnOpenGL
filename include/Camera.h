@@ -10,6 +10,7 @@
 const float YAW         = -90.0f;
 const float PITCH       =  0.0f;
 const float SPEED       =  2.5f;
+const float RUN_MULT    = 3.0f;
 const float SENSITIVITY =  0.1f;
 const float FOV         =  45.0f;
 const float MIN_FOV     =  1.0f;
@@ -32,9 +33,10 @@ public:
     float Pitch;
     // Control
     float Speed;
+    float RunMultiplier;
     float Sensitivity;
 
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f), float yaw = YAW, float pitch = PITCH, float fov = FOV, float speed = SPEED) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), Up(glm::vec3(0.0f, 1.0f, 0.0f)), Speed(SPEED), Sensitivity(SENSITIVITY)
+    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f), float yaw = YAW, float pitch = PITCH, float fov = FOV, float speed = SPEED) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), Up(glm::vec3(0.0f, 1.0f, 0.0f)), RunMultiplier(RUN_MULT),Sensitivity(SENSITIVITY)
     {
         Position = position;
         WorldUp = Up;
@@ -46,11 +48,14 @@ public:
     }
 
 
-    void ProcessMovement(int horizontal, int vertical, float deltaTime)
+    void ProcessMovement(int right, int forward, int up, bool running, float deltaTime)
     {
         // Input is supposed to be a value from -1 to 1 on both axis
-        Position += (float) vertical * Front * deltaTime * Speed;
-        Position += (float) horizontal * Right * deltaTime * Speed;
+        glm::vec3 xz = glm::vec3(1.0f, 0.0f, 1.0f);
+        float spd = running ? Speed * RunMultiplier : Speed;
+        Position += (float) forward * glm::normalize(Front * xz) * deltaTime * spd;
+        Position += (float) right * glm::normalize(Right * xz) * deltaTime * spd;
+        Position += (float) up * WorldUp * deltaTime * spd;
     }
 
     void ProcessRotation(float xOffset, float yOffset, GLboolean constrainPitch = true)

@@ -43,13 +43,13 @@ void main()
 
     vec3 lightDir = normalize(WorldPos - lightPos);
     float nDotL = max(dot(Normal, -lightDir), 0.0f);
-    vec3 diffuse = nDotL * vec3(texture(material.diffuse, TexCoord));
+    vec3 diffuse = nDotL * vec3(texture(material.diffuse, TexCoord)) * lightColor/2;
 
     vec3 reflection = normalize(reflect(lightDir, Normal));
     vec3 camDir = normalize(cameraPos - WorldPos);
     float vDotR = max(dot(camDir, reflection), 0.0f);
-    vec3 specular = vec3(pow(vDotR, material.shininess));// * vec3(texture(material.specular, TexCoord));
+    vec3 specular = vec3(pow(vDotR, material.shininess)) * lightColor/2;
 
-    vec3 color = (ambient + diffuse + specular) * lightColor * material.color;
+    vec3 color = (ambient + diffuse + specular) * material.color;
     FragColor = vec4(color, 1.0f);
 }
